@@ -13,6 +13,7 @@ import getRoutes from '@/util/get_routes';
 import pathParser from '@/util/path_parser';
 
 import Method from '@/enum/method';
+import ServerApi from './util/sap';
 
 const app = express();
 
@@ -119,10 +120,19 @@ app.use((err: any, req: any, res: any, next: any) => {
     } else logger.info(chalk.red('◇'), `\`${routePath}\``);
   }
 
+  app.use((req, res) => {
+    res.status(404).json({
+      error: 404,
+      message: 'Not Found'
+    });
+  });
+
   app.listen(PORT, () => {
     logger.info('○ Port:', PORT);
     logger.info('○ Startup:', Date.now() - startTimestamp, '(ms)');
   });
+
+  ServerApi.getInstance('main', 'localhost:25580');
 })().catch((err) => {
   if (!err['errors']) logger.error(err);
   else
