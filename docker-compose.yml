@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    container_name: api
+    restart: unless-stopped
+    env_file: '.env'
+    ports:
+      - '3000:7000'
+    networks:
+      - main
+
+networks:
+  main:
+    external: true
