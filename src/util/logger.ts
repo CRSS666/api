@@ -4,7 +4,8 @@ export enum Level {
   Debug,
   Info,
   Warning,
-  Error
+  Error,
+  None
 }
 
 export default class Logger {

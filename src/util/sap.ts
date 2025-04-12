@@ -1,6 +1,6 @@
 import net from 'node:net';
 
-import Logger from '@/util/logger';
+import Logger, { Level } from '@/util/logger';
 
 import { Player, ServerInfo } from '@/interfaces/server';
 
@@ -28,6 +28,7 @@ export default class ServerApi {
   public version: string = '0.0.0';
 
   private socket: net.Socket | null = null;
+  private serverKey: string = 'crss';
 
   private name: string = 'localhost';
   private logger: Logger = new Logger('tmp');
@@ -36,16 +37,25 @@ export default class ServerApi {
 
   private handlers: Map<Packet, (data: Buffer) => void> = new Map();
 
-  private constructor(address: string = 'localhost:25580', name: string) {
+  private constructor(
+    address: string = 'localhost:25580',
+    name: string,
+    serverKey: string = 'crss'
+  ) {
     this.name = name;
-    this.logger = new Logger(`crss::api::sap::${this.name}`);
+    this.logger = new Logger(`crss::api::sap::${this.name}`, Level.None);
+    this.serverKey = serverKey;
 
     this.createConnection(address);
   }
 
-  public static getInstance(id: string, address?: string): ServerApi {
+  public static getInstance(
+    id: string,
+    address?: string,
+    key?: string
+  ): ServerApi {
     if (!ServerApi.instances.has(id))
-      ServerApi.instances.set(id, new ServerApi(address, id));
+      ServerApi.instances.set(id, new ServerApi(address, id, key));
     return ServerApi.instances.get(id)!;
   }
 
@@ -54,9 +64,9 @@ export default class ServerApi {
     this.socket = net.createConnection(parseInt(port), host, () => {
       this.status = true;
 
-      const serverKey = process.env.SERVER_KEY ?? 'undefined';
-
-      this.socket?.write(this.encode(Packet.Hello, Buffer.from(serverKey)));
+      this.socket?.write(
+        this.encode(Packet.Hello, Buffer.from(this.serverKey))
+      );
       this.keepAliveInterval = setInterval(() => {
         if (this.socket) {
           this.socket.write(

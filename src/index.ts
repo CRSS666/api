@@ -8,13 +8,13 @@ import path from 'node:path';
 
 import { Request, Response } from '@/util/handler';
 import Logger from '@/util/logger';
+import ServerApi from '@/util/sap';
 import version from '@/util/version';
 import getRoutes from '@/util/get_routes';
 import pathParser from '@/util/path_parser';
+import rateLimiter from '@/util/ratelimit';
 
 import Method from '@/enum/method';
-import ServerApi from './util/sap';
-
 const app = express();
 
 const logger = new Logger('crss::api::main');
@@ -40,9 +40,10 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(multer().any());
+app.use(rateLimiter);
 app.use(express.static(path.join(__dirname, '..', 'data', 'static')));
 
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err: any, req: any, res: any) => {
   webLogger.error(err.stack);
 
   res.status(500).json({
@@ -132,7 +133,7 @@ app.use((err: any, req: any, res: any, next: any) => {
     logger.info('○ Startup:', Date.now() - startTimestamp, '(ms)');
   });
 
-  ServerApi.getInstance('main', 'localhost:25580');
+  //ServerApi.getInstance('main', 'localhost:25580');
 })().catch((err) => {
   if (!err['errors']) logger.error(err);
   else

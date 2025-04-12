@@ -9,7 +9,11 @@
     "dev": "nodemon -r dotenv/config -r tsconfig-paths/register src/index.ts",
     "lint": "eslint",
     "fix": "eslint --fix",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+
+    "tool:db:setup": "ts-node -r dotenv/config -r tsconfig-paths/register src/tools/setup_db.ts",
+    "tool:db:migrate": "ts-node -r dotenv/config -r tsconfig-paths/register src/tools/migrate_db.ts",
+    "tool:uri": "ts-node -r dotenv/config -r tsconfig-paths/register src/tools/auth_url.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +25,7 @@
     "@types/express": "^5.0.1",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.14.1",
+    "@types/pg": "^8.11.12",
     "dotenv": "^16.5.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
@@ -43,9 +48,11 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "1.4.5-lts.2",
+    "nodejs-snowflake": "^2.0.1",
     "nodemailer": "^6.10.0",
     "pg": "^8.14.1",
     "sharp": "^0.34.1",
+    "sqlite3": "^5.1.7",
     "zod": "^3.24.2"
   },
   "packageManager": "pnpm@9.15.2",
