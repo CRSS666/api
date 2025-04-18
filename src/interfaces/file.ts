@@ -1,4 +1,4 @@
-interface RequestFile {
+export interface RequestFile {
   fieldname: string;
   originalname: string;
   encoding: string;
@@ -10,5 +10,3 @@ interface RequestFile {
   path: string;
   buffer: Buffer;
 }
-
-export default RequestFile;

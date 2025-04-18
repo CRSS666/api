@@ -3,10 +3,15 @@ import Method from '@/enum/method';
 
 import { ValidationError } from '@/util/errors';
 
-import { RequestFile } from '@/interfaces';
+import { CookieOptions, RequestFile } from '@/interfaces';
 
 import { ZodObject } from 'zod';
 
+/**
+ * Request class to handle incoming requests.
+ *
+ * @class Request
+ */
 export class Request {
   public method: Method;
   public headers: { [key: string]: string };
@@ -14,6 +19,7 @@ export class Request {
   public body: { [key: string]: any };
   public files: RequestFile[];
   public params: { [key: string]: string | number };
+  public cookies: { [key: string]: string | number };
   public ip: string;
 
   /**
@@ -32,6 +38,7 @@ export class Request {
     this.body = req.body;
     this.files = req.files;
     this.params = req.params;
+    this.cookies = req.cookies;
 
     this.ip = req.headers['x-forwarded-for'] || req.ip;
 
@@ -51,6 +58,25 @@ export class Request {
     return this.query[key.toLowerCase()];
   }
 
+  public getCookie(key: string): string | number | undefined {
+    return this.cookies[key.toLowerCase()];
+  }
+
+  /**
+   * Validate the request body against a Zod schema.
+   *
+   * @param schema The Zod schema to validate against.
+   * @returns The validated data.
+   * @throws ValidationError if the validation fails.
+   * @example
+   * ```ts
+   * const schema = z.object({
+   *   name: z.string(),
+   *   age: z.number()
+   * });
+   * const data = req.validate(schema);
+   * ```
+   */
   public validate<T extends ZodObject<any>>(schema: T): T['_output'] {
     const res = schema.safeParse(this.req.body);
 
@@ -108,6 +134,12 @@ export class Request {
   }
 }
 
+/**
+ * Response class to handle outgoing responses.
+ *
+ * @class Response
+ * @template T The type of the response data.
+ */
 export class Response<T> {
   /**
    * Implement a method instead of using this!
@@ -119,9 +151,22 @@ export class Response<T> {
 
   constructor(res: any, req: any) {
     this.res = res;
+
     this.req = req;
   }
 
+  /**
+   * Check if the request method is allowed.
+   *
+   * @param methods The allowed methods.
+   *
+   * @returns True if the method is allowed, false otherwise.
+   *
+   * @example
+   * ```ts
+   * if (!res.allow([Method.Get, Method.Post])) return;
+   * ```
+   */
   public allow(methods: Method[]): boolean {
     if (!methods.includes(this.req.method)) {
       this.res.set('Allow', methods.join(', ').toUpperCase());
@@ -136,27 +181,87 @@ export class Response<T> {
     return true;
   }
 
+  /**
+   * Create a cookie.
+   *
+   * @param key The name of the cookie.
+   * @param value The value of the cookie.
+   * @param options The options for the cookie.
+   */
+  public cookie(key: string, value: string, options?: CookieOptions) {
+    this.res.cookie(key.toLowerCase(), value, options);
+  }
+
+  /**
+   * Redirect the request to a different URL.
+   *
+   * @param url The URL to redirect to.
+   * @param code The status code to use for the redirect.
+   */
+  public redirect(url: string, code: Status = Status.Found) {
+    this.res.redirect(code, url);
+  }
+
+  /**
+   * Set the status code of the response.
+   *
+   * @param code The status code.
+   * @returns An object with methods to send the response.
+   * @example
+   * ```ts
+   * res.status(Status.Ok).json({ message: 'Hello World' });
+   * ```
+   */
   public status(code: Status) {
     return {
+      /**
+       * A JSON response.
+       *
+       * @param data The data to send.
+       */
       json: (data?: T) => {
         this.res.status(code).json(data);
       },
+      /**
+       * A text response.
+       *
+       * @param data The data to send.
+       */
       send: (data?: T) => {
         this.res.type('txt').status(code).send(data);
       },
+      /**
+       * Set the content type of the response.
+       *
+       * @param type The content type.
+       */
       type: (type: string) => {
         return {
+          /**
+           * Send the response.
+           *
+           * @param data The data to send.
+           */
           send: (data?: T) => {
             this.res.type(type).status(code).send(data);
           }
         };
       },
+      /**
+       * Send an empty response.
+       */
       end: () => {
         this.res.status(code).end();
       }
     };
   }
 
+  /**
+   * Send an error response.
+   *
+   * @param code The status code.
+   * @param message The error message.
+   */
   public error(code: Status, message: string) {
     return this.res.status(code).json({
       error: code,

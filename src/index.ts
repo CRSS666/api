@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import chalk from 'chalk';
+import cookies from 'cookie-parser';
 
 import path from 'node:path';
 
@@ -15,6 +16,7 @@ import pathParser from '@/util/path_parser';
 import rateLimiter from '@/util/ratelimit';
 
 import Method from '@/enum/method';
+import Discord from './util/discord';
 const app = express();
 
 const logger = new Logger('crss::api::main');
@@ -40,10 +42,11 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(multer().any());
+app.use(cookies());
 app.use(rateLimiter);
 app.use(express.static(path.join(__dirname, '..', 'data', 'static')));
 
-app.use((err: any, req: any, res: any) => {
+app.use((err: any, req: any, res: any, next: any) => {
   webLogger.error(err.stack);
 
   res.status(500).json({
