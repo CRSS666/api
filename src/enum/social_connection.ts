@@ -1,4 +1,4 @@
-enum TeamLink {
+enum SocialConnection {
   Website = 'website',
   BlueSky = 'bluesky',
   Mastodon = 'mastodon',
@@ -8,4 +8,4 @@ enum TeamLink {
   Other = 'other'
 }
 
-export default TeamLink;
+export default SocialConnection;
