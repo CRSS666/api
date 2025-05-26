@@ -12,6 +12,10 @@ types.setTypeParser(types.builtins.INT8, (value: string) => {
   return BigInt(value);
 });
 
+types.setTypeParser(types.builtins.TIMESTAMP, (value: string) => {
+  return new Date(value);
+});
+
 (async () => {
   const client = new Client({
     user: process.env.DB_USER!,

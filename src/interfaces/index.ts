@@ -3,9 +3,9 @@ export { CookieOptions } from './cookies';
 export { ServerInfo, Player } from './server';
 export {
   Role,
-  RoleIcon,
   User,
   Connection,
+  MinecraftCodes,
   Session,
   Image,
   Config,

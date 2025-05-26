@@ -1,9 +1,9 @@
 enum Visibility {
-  Public,
-  Unlisted,
-  Private,
-  InQueue,
-  Rejected
+  Public = 'public',
+  Unlisted = 'unlisted',
+  Private = 'private',
+  InQueue = 'in_queue',
+  Rejected = 'rejected'
 }
 
 export default Visibility;

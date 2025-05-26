@@ -1,21 +1,19 @@
 -- Database
 -- CREATE DATABASE "crss_api";
 
+-- Extensions
+-- CREATE EXTENSION vector;
+
 -- Enums
 CREATE TYPE link AS ENUM('website', 'bluesky', 'mastodon', 'github', 'twitch', 'youtube', 'other');
-
--- Tables
-CREATE TABLE "role_icons" (
-  "id" BIGINT PRIMARY KEY,
-  "icon" TEXT NOT NULL,
-  "color" INT NOT NULL
-);
+CREATE TYPE visibility AS ENUM('public', 'unlisted', 'private', 'in_queue', 'rejected');
 
 CREATE TABLE "roles" (
   "id" BIGINT PRIMARY KEY,
-  "icon_id" BIGINT NOT NULL REFERENCES role_icons(id),
   "name" VARCHAR(64) NOT NULL UNIQUE,
   "permissions" BIGINT NOT NULL,
+  "icon" TEXT NOT NULL,
+  "color" INT NOT NULL,
   "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -23,7 +21,7 @@ CREATE TABLE "roles" (
 CREATE TABLE "users" (
   "id" BIGINT PRIMARY KEY,
   "discord_id" BIGINT NOT NULL UNIQUE,
-  "minecraft_id" VARCHAR(36) NOT NULL UNIQUE,
+  "minecraft_id" UUID NOT NULL UNIQUE,
   "username" VARCHAR(32) NOT NULL UNIQUE,
   "display_name" VARCHAR(64) NOT NULL,
   "email" VARCHAR(320) NOT NULL UNIQUE,
@@ -44,6 +42,14 @@ CREATE TABLE "user_connections" (
   "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE "minecraft_codes" (
+  "id" BIGINT PRIMARY KEY,
+  "uuid" UUID NOT NULL UNIQUE,
+  "code" INT NOT NULL UNIQUE,
+  "expires" TIMESTAMP NOT NULL,
+  "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE "sessions" (
   "id" BIGINT PRIMARY KEY,
   "user_id" BIGINT NOT NULL REFERENCES users(id),
@@ -51,6 +57,20 @@ CREATE TABLE "sessions" (
   "refresh_token" VARCHAR(512) NOT NULL UNIQUE,
   "user_agent" VARCHAR(256) NOT NULL,
   "expires" TIMESTAMP NOT NULL,
+  "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "images" (
+  "id" BIGINT PRIMARY KEY,
+  "user_id" BIGINT NOT NULL REFERENCES users(id),
+  "title" VARCHAR(64) NOT NULL,
+  "alt" VARCHAR(256) NOT NULL,
+  "sha" CHAR(40) NOT NULL,
+  "position" VECTOR(3) NOT NULL,
+  "status" VISIBILITY NOT NULL DEFAULT 'in_queue',
+  "queued" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "published" TIMESTAMP,
   "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -66,7 +86,9 @@ CREATE TABLE "config" (
 CREATE TABLE "servers" (
   "id" BIGINT PRIMARY KEY,
   "key" VARCHAR(64) NOT NULL UNIQUE, -- No reused keys!
+  "name" VARCHAR(64) NOT NULL,
   "ip" TEXT NOT NULL,
+  "api" TEXT NOT NULL,
   "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

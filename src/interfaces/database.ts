@@ -17,15 +17,12 @@ interface WithUpdated {
 interface WithTimestamps extends WithCreated, WithUpdated {}
 interface WithAll extends WithSnowflake, WithTimestamps {}
 
-export interface RoleIcon extends WithSnowflake {
-  icon: string;
-  color: number;
-}
-
 export interface Role extends WithAll {
   icon_id: bigint;
   name: string;
   permissions: Permission[];
+  icon: string;
+  color: number;
 }
 
 export interface User extends WithAll {
@@ -46,6 +43,12 @@ export interface Connection extends WithAll {
   url: string;
 }
 
+export interface MinecraftCodes extends WithSnowflake, WithCreated {
+  uuid: string;
+  code: number;
+  expires: Date;
+}
+
 export interface Session extends WithAll {
   user_id: bigint;
   access_token: string;
@@ -59,6 +62,7 @@ export interface Image extends WithAll {
   title: string;
   alt: string;
   sha: string;
+  position: number[];
   status: Visibility;
   queued: Date;
   published: Date;
@@ -71,5 +75,7 @@ export interface Config extends WithTimestamps {
 
 export interface Server extends WithAll {
   key: string;
+  name: string;
   ip: string;
+  api: string;
 }
