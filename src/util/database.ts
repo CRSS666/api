@@ -21,7 +21,7 @@ class Database {
 
   public async query<T>(
     query: string,
-    values: (string | number | bigint | Date)[] | undefined
+    values?: (string | number | bigint | Date)[]
   ): Promise<T[] | undefined> {
     return (await Database.pool?.query<QueryResultRow>(query, values))?.rows as
       | T[]

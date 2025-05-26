@@ -21,14 +21,14 @@ CREATE TABLE "roles" (
 CREATE TABLE "users" (
   "id" BIGINT PRIMARY KEY,
   "discord_id" BIGINT NOT NULL UNIQUE,
-  "minecraft_id" UUID NOT NULL UNIQUE,
+  "minecraft_id" UUID UNIQUE,
   "username" VARCHAR(32) NOT NULL UNIQUE,
   "display_name" VARCHAR(64) NOT NULL,
   "email" VARCHAR(320) NOT NULL UNIQUE,
   "avatar" CHAR(40),
   "banner" CHAR(40),
   "accent_color" INT,
-  "role" BIGINT NOT NULL REFERENCES roles(id),
+  "role" BIGINT REFERENCES roles(id),
   "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

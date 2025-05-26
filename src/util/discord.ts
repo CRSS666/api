@@ -18,7 +18,7 @@ export default class Discord {
       const response = await fetch(Discord.api + url, {
         ...options,
         headers: {
-          'User-Agent': `CRSS (https://crss.cc, ${version})`,
+          'User-Agent': `CRSS/${version} (https://crss.cc)`,
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.token}`,
           ...options?.headers
