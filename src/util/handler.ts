@@ -147,6 +147,16 @@ export class Request {
       const type = split[0].toLowerCase();
       const token = split[1];
 
+      // TODO: Implement server tokens so the mc servers can send authenticated requests for sensitive stuff like linking a mc account to a user.
+      if (type === 'server') {
+        this.res.error(
+          Status.NotImplemented,
+          'Authentiocated request from the minceraft servers are not yet implemented.'
+        );
+
+        throw new InvalidToken();
+      }
+
       if (type !== 'bearer') {
         this.res.error(
           Status.BadRequest,
