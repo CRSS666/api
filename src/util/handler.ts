@@ -1,11 +1,14 @@
 import Status from '@/enum/status';
 import Method from '@/enum/method';
 
-import { ValidationError } from '@/util/errors';
+import { InvalidToken, ValidationError } from '@/util/errors';
+import Logger from '@/util/logger';
+import db from '@/util/database';
 
-import { CookieOptions, RequestFile } from '@/interfaces';
+import { CookieOptions, RequestFile, Session, User } from '@/interfaces';
 
 import { ZodObject } from 'zod';
+import { verify } from 'jsonwebtoken';
 
 /**
  * Request class to handle incoming requests.
@@ -21,6 +24,8 @@ export class Request {
   public params: { [key: string]: string | number };
   public cookies: { [key: string]: string | number };
   public ip: string;
+
+  private logger = new Logger('crss::api::handler::req');
 
   /**
    * Implement a method instead of using this!
@@ -131,6 +136,61 @@ export class Request {
     }
 
     return res.data;
+  }
+
+  public async user(): Promise<User | undefined> {
+    const authorization = this.getHeader('authorization');
+
+    if (authorization) {
+      const split = authorization.split(' ');
+
+      const type = split[0].toLowerCase();
+      const token = split[1];
+
+      if (type !== 'bearer') {
+        this.res.error(
+          Status.BadRequest,
+          'The authorization token must of type bearer.'
+        );
+
+        throw new InvalidToken();
+      }
+
+      try {
+        // validate token
+        const decoded = verify(token, process.env.JWT_SECRET!);
+
+        if (typeof decoded === 'string') {
+          this.logger.error('Expected `JwtPayload` got `string`.');
+
+          throw new Error('Expected `JwtPayload` got `string`.');
+        }
+
+        const session = await db.query<Session>(
+          'SELECT * FROM sessions WHERE id = $1',
+          [decoded.sid]
+        );
+
+        if (session!.length !== 1) throw new Error('Session was not found.');
+        const user = await db.query<User>('SELECT * FROM users WHERE id = $1', [
+          session![0].user_id
+        ]);
+
+        return user![0];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e: any) {
+        this.res.error(Status.BadRequest, 'Invalid authorization token.');
+
+        throw new InvalidToken();
+      }
+    } else {
+      this.res.error(
+        Status.BadRequest,
+        'The authorization header must be present on this route.'
+      );
+
+      throw new InvalidToken();
+    }
   }
 }
 

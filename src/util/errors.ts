@@ -10,3 +10,9 @@ export class ValidationError extends Error {
     this.issues = issues;
   }
 }
+
+export class InvalidToken extends Error {
+  constructor() {
+    super('Invalid Token');
+  }
+}
