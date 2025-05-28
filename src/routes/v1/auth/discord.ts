@@ -1,16 +1,18 @@
 import Status from '@/enum/status';
-import { User } from '@/interfaces';
+
+import { Request, Response } from '@/util/handler';
+import { ms } from '@/util/time';
+import snowflake from '@/util/snowflake';
+import s3 from '@/util/storage';
 import db from '@/util/database';
 import Discord from '@/util/discord';
 
-import { Request, Response } from '@/util/handler';
-import snowflake from '@/util/snowflake';
-
-import { ms } from '@/util/time';
+import { User } from '@/interfaces';
 
 import z, { ZodError } from 'zod';
-
 import { sign } from 'jsonwebtoken';
+
+import crypto from 'node:crypto';
 
 const schema = z.object({
   code: z.string(),
@@ -60,7 +62,6 @@ export const get = async (req: Request, res: Response<void>) => {
     const data = await response.json();
     const dc = new Discord(data.access_token);
     const user = await dc.me();
-    const avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=512`;
 
     const db_user = await db.query<User>(
       'SELECT * FROM users WHERE discord_id = $1',
@@ -71,6 +72,15 @@ export const get = async (req: Request, res: Response<void>) => {
     if (db_user && db_user.length === 0) {
       uid = snowflake.getUniqueID() as bigint;
 
+      const hashes: {
+        avatar: string | null;
+        banner: string | null;
+      } = {
+        avatar: null,
+        banner: null
+      };
+
+      // create user in the database.
       await db.query(
         'INSERT INTO users (id, discord_id, username, display_name, email, avatar, banner, accent_color) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
         [
@@ -79,13 +89,66 @@ export const get = async (req: Request, res: Response<void>) => {
           user.username,
           user.global_name,
           user.email,
-          user.avatar,
-          user.banner,
+          hashes.avatar,
+          hashes.banner,
           user.accent_color
         ]
       );
 
-      // TODO: Upload user avatar & banner to cdn.
+      if (user.avatar || user.banner) {
+        const promises = [];
+
+        // upload user avatar if user has an avatar.
+        if (user.avatar) {
+          const avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=256`;
+          hashes.avatar = crypto
+            .createHash('sha1')
+            .update(`${user.avatar};${Date.now() / 1000}`)
+            .digest('hex');
+
+          promises.push(
+            (async () => {
+              const arrayBuffer = await (await fetch(avatar)).arrayBuffer();
+              await s3.upload(
+                `avatars/${uid}/${hashes.avatar}.webp`,
+                'image/webp',
+                Buffer.from(arrayBuffer)
+              );
+            })()
+          );
+        }
+
+        // upload user banner if user has a banner.
+        if (user.banner) {
+          const banner = `https://cdn.discordapp.com/banners/${user.id}/${user.banner}.webp?size=1024`;
+          hashes.banner = crypto
+            .createHash('sha1')
+            .update(`${user.banner};${Date.now() / 1000}`)
+            .digest('hex');
+
+          promises.push(
+            (async () => {
+              const arrayBuffer = await (await fetch(banner)).arrayBuffer();
+              await s3.upload(
+                `banners/${uid}/${hashes.banner}.webp`,
+                'image/webp',
+                Buffer.from(arrayBuffer)
+              );
+            })()
+          );
+        }
+
+        Promise.allSettled(promises)
+          .then(() => {
+            db.query(
+              'UPDATE users SET avatar = $1, banner = $2 WHERE id = $3',
+              [hashes.avatar, hashes.banner, uid]
+            );
+          })
+          .catch(() => {
+            // ignore :3
+          });
+      }
     } else {
       uid = db_user![0].id;
 

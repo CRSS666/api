@@ -151,7 +151,7 @@ export class Request {
       if (type === 'server') {
         this.res.error(
           Status.NotImplemented,
-          'Authentiocated request from the minceraft servers are not yet implemented.'
+          'Authenticated requests from the minceraft servers are not yet implemented.'
         );
 
         throw new InvalidToken();
@@ -229,13 +229,13 @@ export class Response<T> {
    * Check if the request method is allowed.
    *
    * @param methods The allowed methods.
-   *
    * @returns True if the method is allowed, false otherwise.
-   *
    * @example
    * ```ts
    * if (!res.allow([Method.Get, Method.Post])) return;
    * ```
+   *
+   * @deprecated Use the appropriate named exports.
    */
   public allow(methods: Method[]): boolean {
     if (!methods.includes(this.req.method)) {

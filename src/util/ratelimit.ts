@@ -2,6 +2,8 @@ import sqlite3 from 'sqlite3';
 
 import Status from '@/enum/status';
 
+import { ms } from '@/util/time';
+
 import type { Request, Response, NextFunction } from 'express';
 
 const sql = sqlite3.verbose();
@@ -18,7 +20,7 @@ interface RateLimitRow {
 }
 
 const LIMIT = 300;
-const RESET = 60 * 1000;
+const RESET = ms('1m');
 
 export default function rateLimiter(
   req: Request,
