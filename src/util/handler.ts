@@ -138,7 +138,7 @@ export class Request {
     return res.data;
   }
 
-  public async user(): Promise<User | undefined> {
+  public async session(): Promise<Session | undefined> {
     const authorization = this.getHeader('authorization');
 
     if (authorization) {
@@ -147,59 +147,39 @@ export class Request {
       const type = split[0].toLowerCase();
       const token = split[1];
 
-      // TODO: Implement server tokens so the mc servers can send authenticated requests for sensitive stuff like linking a mc account to a user.
-      if (type === 'server') {
-        this.res.error(
-          Status.NotImplemented,
-          'Authenticated requests from the minceraft servers are not yet implemented.'
-        );
-
-        throw new InvalidToken();
-      }
-
-      if (type !== 'bearer') {
-        this.res.error(
-          Status.BadRequest,
-          'The authorization token must of type bearer.'
-        );
-
-        throw new InvalidToken();
-      }
+      if (type !== 'bearer') return undefined;
 
       try {
-        // validate token
         const decoded = verify(token, process.env.JWT_SECRET!);
 
-        if (typeof decoded === 'string') {
-          this.logger.error('Expected `JwtPayload` got `string`.');
-
-          throw new Error('Expected `JwtPayload` got `string`.');
-        }
+        if (typeof decoded === 'string') return undefined;
 
         const session = await db.query<Session>(
-          'SELECT * FROM sessions WHERE id = $1',
-          [decoded.sid]
+          'SELECT * FROM sessions WHERE id = $1 AND expires = $2',
+          [decoded.sid, new Date(decoded.dcexp)]
         );
 
         if (session!.length !== 1) throw new Error('Session was not found.');
-        const user = await db.query<User>('SELECT * FROM users WHERE id = $1', [
-          session![0].user_id
-        ]);
-
-        return user![0];
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e: any) {
-        this.res.error(Status.BadRequest, 'Invalid authorization token.');
-
-        throw new InvalidToken();
+        return session![0];
+      } catch {
+        return undefined;
       }
-    } else {
-      this.res.error(
-        Status.BadRequest,
-        'The authorization header must be present on this route.'
-      );
+    } else return undefined;
+  }
 
-      throw new InvalidToken();
+  public async user(): Promise<User | undefined> {
+    try {
+      const session = await this.session();
+
+      if (!session) throw new Error('Session was not found.');
+      const user = await db.query<User>('SELECT * FROM users WHERE id = $1', [
+        session.user_id
+      ]);
+
+      return user![0];
+    } catch {
+      this.res.error(Status.Unauthorized, 'Unauthorized');
+      return undefined;
     }
   }
 }

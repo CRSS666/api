@@ -21,7 +21,7 @@ const schema = z.object({
 
 const validHosts = ['crss.cc', 'theclashfruit.me', 'localhost'];
 
-export const get = async (req: Request, res: Response<void>) => {
+export const get = async (req: Request, res: Response<any>) => {
   try {
     const { code, state } = schema.parse(req.query);
 
@@ -163,6 +163,7 @@ export const get = async (req: Request, res: Response<void>) => {
 
     // Create session in the db.
     const sid = snowflake.getUniqueID();
+    const exp = new Date(new Date().getTime() + data.expires_in * 1000);
     await db.query(
       'INSERT INTO sessions (id, user_id, access_token, refresh_token, user_agent, expires) VALUES ($1, $2, $3, $4, $5, $6)',
       [
@@ -171,13 +172,17 @@ export const get = async (req: Request, res: Response<void>) => {
         data.access_token,
         data.refresh_token,
         req.getHeader('user-agent'),
-        new Date(new Date().getTime() + data.expires_in * 1000)
+        exp
       ]
     );
 
     // Create the session token.
     const token = sign(
-      { uid, sid, email: user.email },
+      {
+        uid,
+        sid,
+        dcexp: exp
+      },
       process.env.JWT_SECRET!,
       {
         expiresIn: '30d'
@@ -185,7 +190,7 @@ export const get = async (req: Request, res: Response<void>) => {
     );
 
     res.cookie('session', token, {
-      domain: 'localhost',
+      domain: new URL(stateData.url).hostname,
       path: '/',
       maxAge: ms('30d')
     });

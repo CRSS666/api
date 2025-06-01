@@ -53,8 +53,8 @@ CREATE TABLE "minecraft_codes" (
 CREATE TABLE "sessions" (
   "id" BIGINT PRIMARY KEY,
   "user_id" BIGINT NOT NULL REFERENCES users(id),
-  "access_token" VARCHAR(512) NOT NULL UNIQUE,
-  "refresh_token" VARCHAR(512) NOT NULL UNIQUE,
+  "access_token" VARCHAR(512) NOT NULL,
+  "refresh_token" VARCHAR(512) NOT NULL,
   "user_agent" VARCHAR(256) NOT NULL,
   "expires" TIMESTAMP NOT NULL,
   "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

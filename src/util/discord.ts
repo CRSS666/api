@@ -34,4 +34,32 @@ export default class Discord {
 
     return await response.json();
   }
+
+  public static async renewToken(refreshToken: string): Promise<{
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    refresh_token: string;
+    scope: string;
+  }> {
+    const params = new URLSearchParams();
+    params.append('grant_type', 'refresh_token');
+    params.append('refresh_token', refreshToken);
+    params.append('client_id', process.env.DISCORD_CLIENT!);
+    params.append('client_secret', process.env.DISCORD_SECRET!);
+
+    const response = await fetch(`${Discord.api}/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+        'User-Agent': `CRSS/${version} (https://crss.cc)`
+      },
+      body: params
+    });
+
+    if (!response.ok) throw new Error();
+
+    return await response.json();
+  }
 }
