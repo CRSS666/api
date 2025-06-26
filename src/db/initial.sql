@@ -25,10 +25,12 @@ CREATE TABLE "users" (
   "username" VARCHAR(32) NOT NULL UNIQUE,
   "display_name" VARCHAR(64) NOT NULL,
   "email" VARCHAR(320) NOT NULL UNIQUE,
+  "pronouns" VARCHAR(24),
   "avatar" CHAR(40),
   "banner" CHAR(40),
   "accent_color" INT,
   "role" BIGINT REFERENCES roles(id),
+  "badges" BIGINT NOT NULL DEFAULT 0,
   "created" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

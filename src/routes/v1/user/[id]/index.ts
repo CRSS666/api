@@ -43,10 +43,12 @@ export const get = async (
       minecraft_id: user![0].minecraft_id,
       username: user![0].username,
       display_name: user![0].display_name,
+      pronouns: user![0].pronouns,
       avatar: user![0].avatar,
       banner: user![0].banner,
       accent_color: user![0].accent_color,
       role: user![0].role,
+      badges: user![0].badges,
       created: user![0].created,
       updated: user![0].updated
     });

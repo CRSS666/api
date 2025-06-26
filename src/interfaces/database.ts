@@ -27,14 +27,16 @@ export interface Role extends WithAll {
 
 export interface User extends WithAll {
   discord_id: bigint;
-  minecraft_id: string;
+  minecraft_id: string | null;
   username: string;
   display_name: string;
   email: string;
-  avatar: string;
-  banner: string;
+  pronouns: string | null;
+  avatar: string | null;
+  banner: string | null;
   accent_color: number;
-  role: bigint;
+  role: bigint | null;
+  badges: bigint;
 }
 
 export interface Connection extends WithAll {
