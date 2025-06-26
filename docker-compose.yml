@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     env_file: '.env'
     ports:
-      - '7000:3000'
+      - '7011:3000'
     networks:
       - main
 
