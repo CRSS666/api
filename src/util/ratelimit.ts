@@ -27,6 +27,16 @@ export default function rateLimiter(
   res: Response,
   next: NextFunction
 ) {
+  if (
+    req.headers['x-ratelimit-bypasskey'] === process.env.RATELIMIT_BYPASS_KEY!
+  ) {
+    res.setHeader('X-RateLimit-Limit', '-1');
+    res.setHeader('X-RateLimit-Remaining', '-1');
+    res.setHeader('X-RateLimit-Reset', '-1');
+
+    return next();
+  }
+
   res.setHeader('X-RateLimit-Limit', LIMIT);
 
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;

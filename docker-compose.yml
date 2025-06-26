@@ -1,9 +1,18 @@
 services:
+  website:
+    image: ghcr.io/crss666/website:latest
+    container_name: website
+    restart: unless-stopped
+    env_file: 'website.env'
+    ports:
+      - '7010:3000'
+    networks:
+      - main
   api:
     build: .
     container_name: api
     restart: unless-stopped
-    env_file: '.env'
+    env_file: 'api.env'
     ports:
       - '7011:3000'
     networks:
